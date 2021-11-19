@@ -35,6 +35,7 @@
 	async function init() {
 		lock = CONTRACT(CONTRACT_ADDRESS, ABI, provider);
 		if (!account && ethereum.selectedAddress) {
+			provider.getSigner();
 			account = ethereum.selectedAddress;
 		}
 		if (account) {

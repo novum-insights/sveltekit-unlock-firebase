@@ -13,35 +13,39 @@ const firebaseApp = admin.initializeApp(
 const authClient = firebaseApp && firebaseApp.auth();
 // const dbClient = firebaseApp && firebaseApp.firestore();
 
-const createToken = async (address: string, claims?: any) => {
+const createToken = async (uid: string, claims?: any) => {
 	try {
-		return await authClient.createCustomToken(address, claims);
+		return await authClient.createCustomToken(uid, claims);
 	} catch (error) {
 		console.log(error);
 	}
 };
 
-const createUser = async (address: string, claims?: any) => {
+const createUser = async (address: string) => {
 	// creates user
 	let uid = '';
-	try {
+	const claims = {
+		metamask_user: true,
+		metamask_paid: await validKey(address)
+	};
+	//check user
+	const user = await checkUser(await getUidbyEmail(address)).then((user) => (uid = user.uid));
+	if (!user) {
+		console.log('creating user');
 		return await authClient
 			.createUser({
 				email: `${address}@metamask.io`
 			})
 			.then(async (e) => {
-				const setClaim = {
-					metamask_user: true,
-					metamask_paid: await validKey(address)
-				};
 				uid = e.uid;
-				let token = await createToken(uid, setClaim);
+				let token = await createToken(uid, claims);
 
 				return token;
 			});
-	} catch (error) {
+	} else {
+		console.log('user exists');
 		// if user already exists, return create token
-		return await createToken(address, claims);
+		return await createToken(uid, claims);
 	}
 };
 
