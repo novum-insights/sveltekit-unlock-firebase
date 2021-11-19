@@ -8,8 +8,11 @@
 	import { BigNumber, ethers } from 'ethers';
 	import ABI from '$lib/contract.abi.json';
 	import { contract } from '$lib/contants';
+	import { browser, dev } from '$app/env';
 	const CONTRACT_ADDRESS = contract;
 	// perform metamask login and firebase login
+	// console.log('outside');
+
 
 	let lock: any, subscriptionPriceEth: any, contractWithSigner: any;
 
@@ -22,6 +25,8 @@
 	}
 
 	$: if (ethereum) {
+		// console.log('$');
+
 		ethereum.on('accountsChanged', function (accounts) {
 			logOut();
 			account = accounts[0];
@@ -46,6 +51,7 @@
 		}
 	}
 	onMount(() => {
+		// console.log('on mount');
 		init();
 		getPrice();
 	});
@@ -64,7 +70,7 @@
 			await contractWithSigner.purchase(
 				BigNumber.from(await lock.keyPrice()),
 				account,
-				ethers.constants.AddressZero,
+				browser && ethers.constants.AddressZero,
 				[],
 				{
 					value: BigNumber.from(await lock.keyPrice()),

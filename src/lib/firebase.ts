@@ -16,6 +16,7 @@ import { base } from '$app/paths';
 import { currentUser } from '$lib/stores';
 import { get } from 'svelte/store';
 import { firebaseConfig } from './contants';
+// console.log('firebase');
 
 const firebaseApp: any =
 	browser && (getApps().length === 0 ? initializeApp(firebaseConfig) : getApp());

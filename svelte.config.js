@@ -1,6 +1,6 @@
 import preprocess from 'svelte-preprocess';
 import adapter from '@sveltejs/adapter-node';
-
+console.log(process.env.NODE_ENV)
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
 	// Consult https://github.com/sveltejs/svelte-preprocess
@@ -11,21 +11,22 @@ const config = {
 	kit: {
 		// hydrate the <div id="svelte"> element in src/app.html
 		target: '#svelte',
-
+		prerender: {
+			enabled: false
+		},
 		ssr: false,
+		floc: true,
 		vite: {
-			build: {
-				sourcemap: true,
-			},
-			ssr: {
 
-				external: ['firebase', 'ethers']
+			ssr: {
+				external: ['firebase', 'firebase-admin'],
+				noExternal: process.env.NODE_ENV === 'production' && ['ethers'],
 			}
 		},
 		adapter: adapter({
 			// default options are shown
 			out: 'build',
-			precompress: true,
+
 			env: {
 				host: 'HOST',
 				port: 'PORT'
