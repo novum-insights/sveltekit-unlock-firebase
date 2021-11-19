@@ -28,9 +28,13 @@ const createUser = async (address: string) => {
 		metamask_user: true,
 		metamask_paid: await validKey(address)
 	};
+	let user: any = '';
 	//check user
-	const user = await checkUser(await getUidbyEmail(address)).then((user) => (uid = user.uid));
-	if (!user) {
+	try {
+		user = await checkUser(await getUidbyEmail(address)).then((user) => (uid = user.uid));
+		console.log('user exists');
+		return await createToken(uid, claims);
+	} catch (error) {
 		console.log('creating user');
 		return await authClient
 			.createUser({
@@ -42,10 +46,6 @@ const createUser = async (address: string) => {
 
 				return token;
 			});
-	} else {
-		console.log('user exists');
-		// if user already exists, return create token
-		return await createToken(uid, claims);
 	}
 };
 
