@@ -13,7 +13,7 @@ import {
 	unlink
 } from 'firebase/auth';
 import { base } from '$app/paths';
-import { currentUser } from '$lib/stores';
+import { currentUser, firebaseEnv } from '$lib/stores';
 import { get } from 'svelte/store';
 import { firebaseConfig } from './contants';
 // console.log('firebase');
@@ -21,6 +21,9 @@ import { firebaseConfig } from './contants';
 const firebaseApp: any =
 	browser && (getApps().length === 0 ? initializeApp(firebaseConfig) : getApp());
 const db: any = browser && getFirestore();
+firebaseEnv.set({
+	firebaseControlled: firebaseApp && true
+});
 
 async function loginWithGoogle() {
 	const provider = new GoogleAuthProvider();
@@ -151,12 +154,16 @@ const logOut = async () => {
 		});
 };
 const authChanged = () => {
-	const { address }: any = get(currentUser);
+	// const { address }: any = get(currentUser);
+	// store is hot here so cannot use get(currentUser)
+	let address: any = '';
+	currentUser.subscribe((e) => (address = e.address));
 
 	const auth = getAuth();
 
 	onAuthStateChanged(auth, async (user) => {
 		// setPersistence(auth, browserSessionPersistence).then(() => signIn());
+	
 		const { upgraded } = await fetch(`${base}/api/validkey`, {
 			method: 'post',
 			headers: { 'Content-Type': 'application/json' },

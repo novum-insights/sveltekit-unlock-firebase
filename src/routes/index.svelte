@@ -13,7 +13,6 @@
 	// perform metamask login and firebase login
 	// console.log('outside');
 
-
 	let lock: any, subscriptionPriceEth: any, contractWithSigner: any;
 
 	let error = '';
@@ -26,7 +25,6 @@
 
 	$: if (ethereum) {
 		// console.log('$');
-
 		ethereum.on('accountsChanged', function (accounts) {
 			logOut();
 			account = accounts[0];
@@ -38,7 +36,14 @@
 		console.log('No ethereum?');
 	}
 	async function init() {
+		const accounts = await ethereum.request({
+			method: 'eth_requestAccounts'
+		});
+		account = accounts[0];
+
 		lock = CONTRACT(CONTRACT_ADDRESS, ABI, provider);
+		getPrice();
+
 		if (!account && ethereum.selectedAddress) {
 			provider.getSigner();
 			account = ethereum.selectedAddress;
@@ -53,19 +58,22 @@
 	onMount(() => {
 		// console.log('on mount');
 		init();
-		getPrice();
 	});
+
 	let data: any = '';
 	async function getData() {
-		account ? (data = await readDoc('user_data/user_collection')) : '';
+		account ? (data = await readDoc('app_data/watch_pairs')) : '';
 	}
 
 	async function getPrice() {
-		subscriptionPriceEth = formatEther(BigNumber.from(await lock.keyPrice()));
+		try {
+			subscriptionPriceEth = formatEther(BigNumber.from(await lock.keyPrice()));
+		} catch (e) {
+			console.log(e);
+		}
 	}
 	async function purchase() {
 		contractWithSigner = lock.connect(signer);
-
 		try {
 			await contractWithSigner.purchase(
 				BigNumber.from(await lock.keyPrice()),
@@ -99,10 +107,12 @@
 		}).then((e) => e.json());
 	}
 	$: console.log('currentUser=>', $currentUser);
+	// $: console.log({ lock });
 </script>
 
+<h4>Only works with Rinkeby</h4>
 <!-- You can login with google, but you cannot have the claims added (yet) -->
-<!-- <button on:click={loginWithGoogle}> Google </button> -->
+<button on:click={loginWithGoogle}> Google </button>
 
 {#if ethereum}
 	{#if !$currentUser.loggedIn}
@@ -119,6 +129,7 @@
 			{data ? JSON.stringify(data) : ''}
 		</h1>
 	{/if}
+	<button on:click={getData}> Fetch Data</button>
 
 	{#if $currentUser.uid && $currentUser.upgraded}
 		<button on:click={getData}> Fetch Data</button>
@@ -127,6 +138,9 @@
 			I have made the transaction <button on:click={addClaims}>Add claim</button>
 		</p>
 	{:else if $currentUser.loggedIn && !$currentUser.upgraded}
+		<div>
+			<button on:click={getPrice}> get price </button>
+		</div>
 		<div>
 			<button on:click={purchase}>
 				Purchase for {subscriptionPriceEth ? subscriptionPriceEth : 'loading price'} ETH

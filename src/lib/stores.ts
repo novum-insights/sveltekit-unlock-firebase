@@ -7,3 +7,7 @@ export const currentUser = writable({
 	uid: '',
 	upgraded: false
 });
+
+export const firebaseEnv = writable({
+	firebaseControlled: false
+});
