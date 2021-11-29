@@ -5,3 +5,4 @@ node_modules
 /package
 .env
 src/routes/serviceaccount.json
+src/routes/novum-defi-dev.json

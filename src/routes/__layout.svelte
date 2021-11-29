@@ -1,13 +1,11 @@
 <script>
 	import { authChanged } from '$lib/firebase';
-	import { firebaseEnv } from '$lib/stores';
 
 	import { onMount } from 'svelte';
 
 	onMount(() => {
-		if ($firebaseEnv.firebaseControlled) authChanged();
+		authChanged();
 	});
-
 </script>
 
 <svelte:head>

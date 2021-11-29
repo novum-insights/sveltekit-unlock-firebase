@@ -1,48 +1,52 @@
 <script lang="ts">
-	import { loginWithGoogle, logOut, readDoc, signIn } from '$lib/firebase';
-	import { currentUser } from '$lib/stores';
-	import { formatEther } from 'ethers/lib/utils';
+	import { loginWithGoogle, logOut, readDoc, metamaskSignIn } from '$lib/firebase';
+	import { currentUser, isLoggingIn } from '$lib/stores';
 
-	import { CONTRACT, ethereum, provider, signer } from '$lib/unlock';
+	import { CONTRACT, ethereum, provider, signer } from '$lib/web3';
 	import { onMount } from 'svelte';
-	import { BigNumber, ethers } from 'ethers';
 	import ABI from '$lib/contract.abi.json';
 	import { contract } from '$lib/contants';
-	import { browser, dev } from '$app/env';
+	import { getPrice, handleSignMessage, purchase } from '$lib/unlock/utils';
 	const CONTRACT_ADDRESS = contract;
-	// perform metamask login and firebase login
-	// console.log('outside');
 
-	let lock: any, subscriptionPriceEth: any, contractWithSigner: any;
+	let lock: any, subscriptionPriceEth: any;
 
 	let error = '';
 	let account = '';
-	async function loginWithMetamask() {
-		if (account) {
-			signIn();
+	let logs = '';
+	let transactionHash = '';
+	let data: any = '';
+
+	$: {
+		if (ethereum) {
+			// console.log('$');
+			ethereum.on('accountsChanged', function (accounts: Array<string>) {
+				logOut();
+				account = accounts[0];
+			});
+			ethereum.on('chainChanged', function () {
+				window.location.reload();
+			});
+		} else {
+			console.log('No ethereum?');
 		}
 	}
-
-	$: if (ethereum) {
-		// console.log('$');
-		ethereum.on('accountsChanged', function (accounts) {
-			logOut();
+	async function connect() {
+		try {
+			const accounts = await ethereum.request({
+				method: 'eth_requestAccounts'
+			});
 			account = accounts[0];
-		});
-		ethereum.on('chainChanged', function () {
-			window.location.reload();
-		});
-	} else {
-		console.log('No ethereum?');
+		} catch (e) {
+			console.log(e.message);
+			error = e.message;
+		}
 	}
 	async function init() {
-		const accounts = await ethereum.request({
-			method: 'eth_requestAccounts'
-		});
-		account = accounts[0];
+		connect();
 
 		lock = CONTRACT(CONTRACT_ADDRESS, ABI, provider);
-		getPrice();
+		subscriptionPriceEth = await getPrice(lock);
 
 		if (!account && ethereum.selectedAddress) {
 			provider.getSigner();
@@ -50,53 +54,31 @@
 		}
 		if (account) {
 			$currentUser.address = account;
-			// checkSubscription();
 		} else {
 			console.log('Need metamask');
 		}
 	}
 	onMount(() => {
 		// console.log('on mount');
-		init();
+		if (ethereum) init();
 	});
-
-	let data: any = '';
 	async function getData() {
-		account ? (data = await readDoc('app_data/watch_pairs')) : '';
+		account ? (data = await readDoc('user_data/user_collection')) : '';
+	}
+	async function makePurchase() {
+		let { tx, e } = await purchase(lock, signer, account);
+		logs = tx;
+		error = e;
+		transactionHash = tx.hash;
+		if (transactionHash) {
+			// logOut();
+			// metamaskSignIn();
+			// regenerate token with claim.
+		}
 	}
 
-	async function getPrice() {
-		try {
-			subscriptionPriceEth = formatEther(BigNumber.from(await lock.keyPrice()));
-		} catch (e) {
-			console.log(e);
-		}
-	}
-	async function purchase() {
-		contractWithSigner = lock.connect(signer);
-		try {
-			await contractWithSigner.purchase(
-				BigNumber.from(await lock.keyPrice()),
-				account,
-				browser && ethers.constants.AddressZero,
-				[],
-				{
-					value: BigNumber.from(await lock.keyPrice()),
-					gasLimit: 250000
-				}
-			);
-		} catch (e) {
-			console.log(e);
-			error = e.message;
-		}
-	}
-	async function checkSubscription() {
-		let upgraded = await lock.getHasValidKey(account);
-		$currentUser.upgraded = upgraded;
-		return upgraded;
-	}
-	async function addClaims() {
-		return await fetch(`/api/addclaim`, {
+	async function signWithMessage() {
+		let data = await fetch('/api/nonce', {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json'
@@ -105,18 +87,20 @@
 				address: account
 			})
 		}).then((e) => e.json());
+		console.log(await handleSignMessage(signer, data.address, data.nonce));
+		
 	}
-	$: console.log('currentUser=>', $currentUser);
-	// $: console.log({ lock });
+	// $: console.log('currentUser=>', $currentUser);
 </script>
 
 <h4>Only works with Rinkeby</h4>
-<!-- You can login with google, but you cannot have the claims added (yet) -->
+<!-- You can login with google, but you cannot have the claims added (yet) paywall with stripe/rapyd -->
 <button on:click={loginWithGoogle}> Google </button>
+<button on:click={signWithMessage}> signWithMessage </button>
 
 {#if ethereum}
-	{#if !$currentUser.loggedIn}
-		<button on:click={loginWithMetamask}> Login Metamask </button>
+	{#if !$currentUser.loggedIn && account}
+		<button on:click={metamaskSignIn}> Login Metamask </button>
 	{/if}
 	{#if $currentUser.uid}
 		<button on:click={logOut}> Logout </button>
@@ -129,24 +113,31 @@
 			{data ? JSON.stringify(data) : ''}
 		</h1>
 	{/if}
-	<button on:click={getData}> Fetch Data</button>
 
 	{#if $currentUser.uid && $currentUser.upgraded}
 		<button on:click={getData}> Fetch Data</button>
-		<p>
-			<!-- this can be automated and add the claims after the transaction has succeeded -->
-			I have made the transaction <button on:click={addClaims}>Add claim</button>
-		</p>
 	{:else if $currentUser.loggedIn && !$currentUser.upgraded}
 		<div>
-			<button on:click={getPrice}> get price </button>
-		</div>
-		<div>
-			<button on:click={purchase}>
+			<button on:click={makePurchase}>
 				Purchase for {subscriptionPriceEth ? subscriptionPriceEth : 'loading price'} ETH
 			</button>
 		</div>
 	{/if}
+	{#if !account}
+		<p>{error}</p>
+
+		<button on:click={connect}>Connect metamask</button>
+	{/if}
 {:else}
-	<p>Please install metamask</p>
+	<p>To login with web3 please install metamask</p>
 {/if}
+
+{#if $isLoggingIn}
+	<p>Logging in...</p>
+{/if}
+<code>
+	<pre>{logs ?JSON.stringify(logs, null, 4) :''}</pre>
+</code>
+<code>
+	<pre>{error ?JSON.stringify(error, null, 4) :''}</pre>
+</code>

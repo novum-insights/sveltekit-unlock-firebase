@@ -11,3 +11,7 @@ export const currentUser = writable({
 export const firebaseEnv = writable({
 	firebaseControlled: false
 });
+
+export const isLoggingIn = writable(false);
+
+export const signature = writable('');

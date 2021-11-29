@@ -1,14 +1,15 @@
 import admin from 'firebase-admin';
 import serviceAccount from './serviceaccount.json';
-import { validKey } from './_ethersAdapter';
+import { validKey, verifyMessage } from './_ethersAdapter';
+
+export const connectedClients = {};
 
 const firebaseApp = admin.initializeApp(
 	{
 		//@ts-ignore
-		credential: admin.credential.cert(serviceAccount),
-		databaseURL: 'https://unlockprotocoldev.firebaseio.com'
+		credential: admin.credential.cert(serviceAccount)
 	},
-	'unlockprotocoldev'
+	serviceAccount.project_id
 );
 const authClient = firebaseApp && firebaseApp.auth();
 // const dbClient = firebaseApp && firebaseApp.firestore();
@@ -20,6 +21,14 @@ const createToken = async (uid: string, claims?: any) => {
 		console.log(error);
 	}
 };
+const decodeAddress = async (message: string, signature: string) => {
+	const address = await verifyMessage(message, signature);
+	const token = await createUser(address);
+	const uid = await getUidbyEmail(address);
+	const upgraded = await validKey(address);
+	// console.log({ token, uid, upgraded });
+	return { token, uid, upgraded };
+};
 
 const createUser = async (address: string) => {
 	// creates user
@@ -30,6 +39,7 @@ const createUser = async (address: string) => {
 	};
 	let user: any = '';
 	//check user
+
 	try {
 		user = await checkUser(await getUidbyEmail(address)).then((user) => (uid = user.uid));
 		console.log('user exists');
@@ -79,5 +89,6 @@ export {
 	destroyToken,
 	getUidbyEmail,
 	getClaimsbyUid,
-	listAllUsers
+	listAllUsers,
+	decodeAddress
 };

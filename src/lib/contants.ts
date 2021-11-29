@@ -8,4 +8,5 @@ const firebaseConfig = {
 	appId: '1:784966174148:web:4cf4f36702e7b1aa189091'
 };
 const rpcProvider: any = import.meta.env.VITE_RPC_PROVIDER;
-export { contract, firebaseConfig, rpcProvider };
+const secureMessage: any = import.meta.env.VITE_SECURE_MESSAGE;
+export { contract, firebaseConfig, rpcProvider, secureMessage };
