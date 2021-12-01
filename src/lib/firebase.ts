@@ -67,8 +67,8 @@ async function metamaskSignIn() {
 	isLoggingIn.set(true);
 	let message = '';
 	signature.subscribe((e) => (message = e));
-	console.log({ message });
-	let { token, uid, upgraded } = await fetch(`${base}/api/address`, {
+	// console.log({ message });
+	let { token, uid, upgraded } = await fetch(`${base}/api/login`, {
 		method: 'post',
 		headers: {
 			'Content-Type': 'application/json'
