@@ -34,7 +34,7 @@ async function checkSubscription(lock: any, account: string) {
 
 async function handleSignMessage(signer: any, address?: string, nonce?: string) {
 	try {
-		const signature = await signer.signMessage(`${secureMessage}-${nonce}`);
+		const signature = await signer.signMessage(`${secureMessage}`);
 		return signature;
 	} catch (err) {
 		throw new Error('You need to sign the message to be able to log in.');

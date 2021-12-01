@@ -13,7 +13,7 @@ import {
 	unlink
 } from 'firebase/auth';
 import { base } from '$app/paths';
-import { currentUser, firebaseEnv, isLoggingIn } from '$lib/stores';
+import { currentUser, firebaseEnv, isLoggingIn, signature } from '$lib/stores';
 import { get } from 'svelte/store';
 import { firebaseConfig } from './contants';
 import { ethereum } from './web3';
@@ -61,16 +61,19 @@ async function loginWithGoogle() {
 async function metamaskSignIn() {
 	const auth = getAuth();
 	// const { address }: any = get(currentUser);
-	let address: any = '';
+	// let address: any = '';
+	// currentUser.subscribe((e) => (address = e.address));
+	
 	isLoggingIn.set(true);
-
-	currentUser.subscribe((e) => (address = e.address));
+	let message = '';
+	signature.subscribe((e) => (message = e));
+	console.log({ message });
 	let { token, uid, upgraded } = await fetch(`${base}/api/address`, {
 		method: 'post',
 		headers: {
 			'Content-Type': 'application/json'
 		},
-		body: JSON.stringify({ address })
+		body: JSON.stringify({ message })
 	})
 		.then((e) => e.json())
 		.then((e) => e);
@@ -84,7 +87,7 @@ async function metamaskSignIn() {
 				// console.log(token);
 
 				currentUser.set({
-					address,
+					address: uid,
 					user: creds.user,
 					loggedIn: false,
 					uid,

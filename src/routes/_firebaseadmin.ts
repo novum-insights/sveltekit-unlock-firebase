@@ -22,11 +22,12 @@ const createToken = async (uid: string, claims?: any) => {
 	}
 };
 const decodeAddress = async (message: string, signature: string) => {
+
 	const address = await verifyMessage(message, signature);
 	const token = await createUser(address);
 	const uid = await getUidbyEmail(address);
 	const upgraded = await validKey(address);
-	// console.log({ token, uid, upgraded });
+	// console.log({ token, uid, upgraded, address });
 	return { token, uid, upgraded };
 };
 

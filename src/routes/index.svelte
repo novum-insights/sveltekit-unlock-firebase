@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { loginWithGoogle, logOut, readDoc, metamaskSignIn } from '$lib/firebase';
-	import { currentUser, isLoggingIn } from '$lib/stores';
+	import { currentUser, isLoggingIn, signature } from '$lib/stores';
 
 	import { CONTRACT, ethereum, provider, signer } from '$lib/web3';
 	import { onMount } from 'svelte';
@@ -87,8 +87,10 @@
 				address: account
 			})
 		}).then((e) => e.json());
-		console.log(await handleSignMessage(signer, data.address, data.nonce));
-		
+
+		// console.log(await handleSignMessage(signer, data.address, data.nonce));
+		$signature = await handleSignMessage(signer, data.address, data.nonce);
+		metamaskSignIn();
 	}
 	// $: console.log('currentUser=>', $currentUser);
 </script>
@@ -96,11 +98,11 @@
 <h4>Only works with Rinkeby</h4>
 <!-- You can login with google, but you cannot have the claims added (yet) paywall with stripe/rapyd -->
 <button on:click={loginWithGoogle}> Google </button>
-<button on:click={signWithMessage}> signWithMessage </button>
 
 {#if ethereum}
 	{#if !$currentUser.loggedIn && account}
-		<button on:click={metamaskSignIn}> Login Metamask </button>
+		<button on:click={signWithMessage}>  Login Metamask </button>
+		<!-- <button on:click={metamaskSignIn}> </button> -->
 	{/if}
 	{#if $currentUser.uid}
 		<button on:click={logOut}> Logout </button>
