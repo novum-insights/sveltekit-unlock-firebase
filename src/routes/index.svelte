@@ -71,8 +71,7 @@
 		error = e;
 		transactionHash = tx.hash;
 		if (transactionHash) {
-			// logOut();
-			// metamaskSignIn();
+			
 			// regenerate token with claim.
 		}
 	}
@@ -97,11 +96,20 @@
 
 <h4>Only works with Rinkeby</h4>
 <!-- You can login with google, but you cannot have the claims added (yet) paywall with stripe/rapyd -->
-<button on:click={loginWithGoogle}> Google </button>
+{#if !$currentUser.uid && !$currentUser.loggedIn}
+	<button on:click={loginWithGoogle}>
+		<img src="https://img.icons8.com/color/32/000000/google-logo.png" alt="" /></button
+	>
+{/if}
 
 {#if ethereum}
 	{#if !$currentUser.loggedIn && account}
-		<button on:click={signWithMessage}>  Login Metamask </button>
+		<button on:click={signWithMessage}>
+			<img
+				src="https://raw.githubusercontent.com/MetaMask/brand-resources/master/SVG/metamask-fox.svg"
+				alt=""
+			/></button
+		>
 		<!-- <button on:click={metamaskSignIn}> </button> -->
 	{/if}
 	{#if $currentUser.uid}
@@ -110,7 +118,7 @@
 			logged in as {$currentUser.uid}
 			{$currentUser.user.email}
 		</p>
-
+		
 		<h1>
 			{data ? JSON.stringify(data) : ''}
 		</h1>
@@ -120,9 +128,16 @@
 		<button on:click={getData}> Fetch Data</button>
 	{:else if $currentUser.loggedIn && !$currentUser.upgraded}
 		<div>
+			<p>You need the membership to unlock this content.</p>
 			<button on:click={makePurchase}>
 				Purchase for {subscriptionPriceEth ? subscriptionPriceEth : 'loading price'} ETH
 			</button>
+			{#if transactionHash}
+				<p>
+					Transaction hash:
+					<a href="https://rinkeby.etherscan.io/tx/{transactionHash}">{transactionHash}</a>
+				</p>
+			{/if}
 		</div>
 	{/if}
 	{#if !account}
@@ -138,8 +153,8 @@
 	<p>Logging in...</p>
 {/if}
 <code>
-	<pre>{logs ?JSON.stringify(logs, null, 4) :''}</pre>
+	<pre>{logs ?JSON.stringify(logs, null, 2) :''}</pre>
 </code>
 <code>
-	<pre>{error ?JSON.stringify(error, null, 4) :''}</pre>
+	<pre>{error ?JSON.stringify(error, null, 2) :''}</pre>
 </code>

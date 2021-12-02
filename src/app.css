@@ -1,0 +1,25 @@
+body {
+	background-color: #2a2a2a;
+	color: #fff;
+}
+button {
+	background: white;
+	padding: 4px;
+	border: none;
+	border-radius: 4px;
+	outline: none;
+	cursor: pointer;
+}
+
+button > img {
+	width: 24px;
+	height: 24px;
+}
+
+h4 {
+	color: rgb(255, 153, 0);
+}
+
+code>pre {
+    width: 300px
+}

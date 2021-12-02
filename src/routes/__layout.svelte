@@ -2,6 +2,7 @@
 	import { authChanged } from '$lib/firebase';
 
 	import { onMount } from 'svelte';
+	import '../app.css';
 
 	onMount(() => {
 		authChanged();
@@ -12,4 +13,10 @@
 	<title>Sveltekit Unlock Protocol + Firebase Auth with Metamask Demo</title>
 </svelte:head>
 
-<slot />
+<main>
+	<slot />
+</main>
+
+<style>
+
+</style>
