@@ -1,16 +1,16 @@
+import { firebaseAdmin } from '$lib/contants';
 import admin from 'firebase-admin';
-import serviceAccount from './serviceaccount.json';
+// import serviceAccount from './serviceaccount.json';
 import { validKey, verifyMessage } from './_ethersAdapter';
 
 export const connectedClients = {};
 
-const firebaseApp = admin.initializeApp(
-	{
-		//@ts-ignore
-		credential: admin.credential.cert(serviceAccount)
-	},
-	serviceAccount.project_id
-);
+const firebaseApp = admin.initializeApp({
+	//@ts-ignore
+	credential: admin.credential.cert(
+		JSON.parse(Buffer.from(firebaseAdmin, 'base64').toString('ascii'))
+	)
+});
 const authClient = firebaseApp && firebaseApp.auth();
 // const dbClient = firebaseApp && firebaseApp.firestore();
 
@@ -22,7 +22,6 @@ const createToken = async (uid: string, claims?: any) => {
 	}
 };
 const decodeAddress = async (message: string, signature: string) => {
-
 	const address = await verifyMessage(message, signature);
 	const token = await createUser(address);
 	const uid = await getUidbyEmail(address);

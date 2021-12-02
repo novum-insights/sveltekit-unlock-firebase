@@ -9,4 +9,5 @@ const firebaseConfig = {
 };
 const rpcProvider: any = import.meta.env.VITE_RPC_PROVIDER;
 const secureMessage: any = import.meta.env.VITE_SECURE_MESSAGE;
-export { contract, firebaseConfig, rpcProvider, secureMessage };
+const firebaseAdmin: any = import.meta.env.VITE_FIREBASE_ADMIN;
+export { contract, firebaseConfig, rpcProvider, secureMessage, firebaseAdmin };
