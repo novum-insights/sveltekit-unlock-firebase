@@ -21,7 +21,7 @@
 		if (ethereum) {
 			// console.log('$');
 			ethereum.on('accountsChanged', function (accounts: Array<string>) {
-				logOut();
+				logOut({ reload: true });
 				account = accounts[0];
 			});
 			ethereum.on('chainChanged', function () {
@@ -42,9 +42,37 @@
 			error = e.message;
 		}
 	}
+	async function swapNetwork() {
+		try {
+			// check if the chain to connect to is installed
+			await ethereum.request({
+				method: 'wallet_switchEthereumChain',
+				params: [{ chainId: '0x4' }] // chainId must be in hexadecimal numbers
+			});
+		} catch (error) {
+			// This error code indicates that the chain has not been added to MetaMask
+			// if it is not, then install it into the user MetaMask
+			// if (error.code === 4902) {
+			// 	try {
+			// 		await ethereum.request({
+			// 			method: 'wallet_addEthereumChain',
+			// 			params: [
+			// 				{
+			// 					chainId: '0x61',
+			// 					rpcUrl: 'https://data-seed-prebsc-1-s1.binance.org:8545/'
+			// 				}
+			// 			]
+			// 		});
+			// 	} catch (addError) {
+			// 		console.error(addError);
+			// 	}
+			// }
+			console.error(error);
+		}
+	}
 	async function init() {
 		connect();
-
+		swapNetwork();
 		lock = CONTRACT(CONTRACT_ADDRESS, ABI, provider);
 		subscriptionPriceEth = await getPrice(lock);
 
@@ -71,8 +99,10 @@
 		error = e;
 		transactionHash = tx.hash;
 		if (transactionHash) {
-			
-			// regenerate token with claim.
+			let receipt = await provider.waitForTransaction(transactionHash, 5);
+			console.log({ receipt });
+			// logout and regenrate token
+			logOut({ reload: false }).then(() => metamaskSignIn());
 		}
 	}
 
@@ -113,12 +143,12 @@
 		<!-- <button on:click={metamaskSignIn}> </button> -->
 	{/if}
 	{#if $currentUser.uid}
-		<button on:click={logOut}> Logout </button>
+		<button on:click={() => logOut({ reload: true })}> Logout </button>
 		<p>
 			logged in as {$currentUser.uid}
 			{$currentUser.user.email}
 		</p>
-		
+
 		<h1>
 			{data ? JSON.stringify(data) : ''}
 		</h1>

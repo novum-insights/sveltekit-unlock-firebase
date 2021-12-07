@@ -63,7 +63,7 @@ async function metamaskSignIn() {
 	// const { address }: any = get(currentUser);
 	// let address: any = '';
 	// currentUser.subscribe((e) => (address = e.address));
-	
+
 	isLoggingIn.set(true);
 	let message = '';
 	signature.subscribe((e) => (message = e));
@@ -150,12 +150,12 @@ async function unLinkProviders() {
 		});
 }
 
-const logOut = async () => {
+const logOut = async ({ reload = true }) => {
 	const auth = getAuth();
 	// await fetch('logout');
 
 	//refresh on logout
-	window.location.reload();
+	reload && window.location.reload();
 	await signOut(auth)
 		.then(() => {})
 		.catch((error) => {

@@ -80,7 +80,12 @@ const getClaimsbyUid = async (uid: string) =>
 			return {};
 		}
 	});
-
+const getAddressbyUid = async (uid: string) => {
+	const user = await authClient.getUser(uid);
+	const email = user.email;
+	const [address, _] = email.split('@');
+	return address;
+};
 const listAllUsers = async () => await authClient.listUsers(1).then((users) => users);
 export {
 	createUser,
@@ -90,5 +95,6 @@ export {
 	getUidbyEmail,
 	getClaimsbyUid,
 	listAllUsers,
-	decodeAddress
+	decodeAddress,
+	getAddressbyUid
 };
