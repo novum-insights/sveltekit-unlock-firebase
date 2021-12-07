@@ -60,7 +60,7 @@ async function loginWithGoogle() {
 
 async function metamaskSignIn() {
 	const auth = getAuth();
-	// const { address }: any = get(currentUser);
+	const { address }: any = get(currentUser);
 	// let address: any = '';
 	// currentUser.subscribe((e) => (address = e.address));
 
@@ -87,7 +87,7 @@ async function metamaskSignIn() {
 				// console.log(token);
 
 				currentUser.set({
-					address: uid,
+					address,
 					user: creds.user,
 					loggedIn: false,
 					uid,

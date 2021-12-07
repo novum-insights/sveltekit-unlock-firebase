@@ -100,9 +100,10 @@
 		transactionHash = tx.hash;
 		if (transactionHash) {
 			let receipt = await provider.waitForTransaction(transactionHash, 5);
-			console.log({ receipt });
 			// logout and regenrate token
-			logOut({ reload: false }).then(() => metamaskSignIn());
+			if (receipt) {
+				logOut({ reload: false }).then(() => metamaskSignIn());
+			}
 		}
 	}
 
@@ -165,7 +166,8 @@
 			{#if transactionHash}
 				<p>
 					Transaction hash:
-					<a href="https://rinkeby.etherscan.io/tx/{transactionHash}">{transactionHash}</a>
+					<a href="https://rinkeby.etherscan.io/tx/{transactionHash}">{transactionHash}</a> waiting for
+					5 confirmations, you may log out and log back in to access the content.
 				</p>
 			{/if}
 		</div>
