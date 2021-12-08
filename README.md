@@ -36,7 +36,7 @@ Add a JSON-RPC API provider from infura.io or alchemyapi.io to `.env`.
 - Have anonymous/Google provider login enabled on authentication on firebase.
 - The `firebase-admin` package isn't friendly with serverless environment and this **sveltekit example uses `@sveltejs/adapter-node`**
 - The example at https://sveltekit-web3.herokuapp.com/ has a 1 day lock. To setup your own lock please head over to https://unlock-protocol.com/.
-
+- This example uses `user_data/user_collection` on `getData()` in `index.svelte` file modify this and the claims to fit your need.
 
 
 ## Adding Custom Claims to firestore rules
