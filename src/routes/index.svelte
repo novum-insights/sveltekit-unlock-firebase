@@ -7,6 +7,7 @@
 	import ABI from '$lib/contract.abi.json';
 	import { contract } from '$lib/contants';
 	import { getPrice, handleSignMessage, purchase } from '$lib/unlock/utils';
+	import { connect, requestNetwork } from '$lib/web3/helpers';
 	const CONTRACT_ADDRESS = contract;
 
 	let lock: any, subscriptionPriceEth: any;
@@ -22,7 +23,6 @@
 			// console.log('$');
 			ethereum.on('accountsChanged', function (accounts: Array<string>) {
 				logOut({ reload: true });
-				account = accounts[0];
 			});
 			ethereum.on('chainChanged', function () {
 				window.location.reload();
@@ -31,55 +31,13 @@
 			console.log('No ethereum?');
 		}
 	}
-	async function connect() {
-		try {
-			const accounts = await ethereum.request({
-				method: 'eth_requestAccounts'
-			});
-			account = accounts[0];
-		} catch (e) {
-			console.log(e.message);
-			error = e.message;
-		}
-	}
-	async function swapNetwork() {
-		try {
-			// check if the chain to connect to is installed
-			await ethereum.request({
-				method: 'wallet_switchEthereumChain',
-				params: [{ chainId: '0x4' }] // chainId must be in hexadecimal numbers
-			});
-		} catch (error) {
-			// This error code indicates that the chain has not been added to MetaMask
-			// if it is not, then install it into the user MetaMask
-			// if (error.code === 4902) {
-			// 	try {
-			// 		await ethereum.request({
-			// 			method: 'wallet_addEthereumChain',
-			// 			params: [
-			// 				{
-			// 					chainId: '0x61',
-			// 					rpcUrl: 'https://data-seed-prebsc-1-s1.binance.org:8545/'
-			// 				}
-			// 			]
-			// 		});
-			// 	} catch (addError) {
-			// 		console.error(addError);
-			// 	}
-			// }
-			console.error(error);
-		}
-	}
+
 	async function init() {
-		connect();
-		swapNetwork();
+		const accounts = await connect();
+		account = accounts[0];
+		requestNetwork({ chainId: '0x4' });
 		lock = CONTRACT(CONTRACT_ADDRESS, ABI, provider);
 		subscriptionPriceEth = await getPrice(lock);
-
-		if (!account && ethereum.selectedAddress) {
-			provider.getSigner();
-			account = ethereum.selectedAddress;
-		}
 		if (account) {
 			$currentUser.address = account;
 		} else {
