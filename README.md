@@ -1,16 +1,27 @@
 # Unlock-protocol + Sveltekit
 
+Elevate your SaaS product login with metamask, firebase and paywall customers with [unlock-protocol](https://unlock-protocol.com/).
+
+## Features
+
+- Use Metamask to login via firebase
+- Uses both firebase-admin and firebase v9
+- Firebase [custom claims](https://firebase.google.com/docs/auth/admin/custom-claims) for access to database
+
 ## Setup
 
 Clone repo, `npm i` | `pnpm i`.
 
-Add `serviceaccount.json` obtained from firebase console -> Project settings -> Service accounts -> Generate new private `src/routes`.
+Add `serviceaccount.json` obtained from firebase console -> Project settings -> Service accounts -> Generate new private and encode to base64 using any of these commands
 
-Add `contract.abi.json` that you can get from [etherscan](https://rinkeby.etherscan.io/address/0x7b3f121baba6ffe673875a92eb0f3f05f20bed24#code).
+- `openssl base64 < serviceaccount.json | tr -d '\n' | xclip -sel clipboard` paste contents of this file to `.env` on mac use `pbcopy`.
+- `openssl base64 -in serviceaccount.json -out encoded_serviceaccount.txt` copy contents of this file to `.env`
+
+Add `contract.abi.json` that you can get from [etherscan](https://rinkeby.etherscan.io/address/0x3f496D438aE2520ee839f3909ECeCcA40B4B22D3#code).
 
 Add `firebaseConfig` from firebase console -> Project settings -> General (scroll down to your apps) to `src/lib/constants.ts`
 
-Add a JSON-RPC API provider from infura.io or alchemyapi.io to `.env` check `.env-sample`.
+Add a JSON-RPC API provider from infura.io or alchemyapi.io to `.env`.
 
 ## Adding Custom Claims to firestore rules
 
@@ -39,12 +50,20 @@ service cloud.firestore {
 }
 ```
 
-Features
-
-- Use Metamask to login via firebase
-- Uses both firebase-admin and firebase v9
-- Firebase [custom claims](https://firebase.google.com/docs/auth/admin/custom-claims) for access to database
-
 ## Usage
 
 `pnpm dev` use metamask with `RINKEBY` as your network once you pay the key for unlock you will be able to fetch the data from firebase or you will get 403 Permission errors.
+
+- The sample app requests the client to switch to rinkeby network.
+
+## Sanity Checks and prerequisites.
+
+- Have firestore enabled on firebase.
+- Have anonymous/Google provider login enabled on authentication on firebase.
+- The `firebase-admin` package isn't friendly with serverless environment and this **sveltekit example uses `@sveltejs/adapter-node`**
+- The example at https://sveltekit-web3.herokuapp.com/ has a 1 day lock. To setup your own lock please head over to https://unlock-protocol.com/.
+
+
+## Current limitations
+
+- Login with google is implemented as an example and our product integration uses social login with stripe/rapyd.
