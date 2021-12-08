@@ -15,8 +15,8 @@ Clone repo, `npm i` | `pnpm i`.
 
 Add `serviceaccount.json` obtained from firebase console -> Project settings -> Service accounts -> Generate new private and encode to base64 using any of these commands.
 
-- `openssl base64 < serviceaccount.json | tr -d '\n' | xclip -sel clipboard` paste contents of this file to `.env` on mac use `pbcopy` instead of `xclip`.
-- `openssl base64 -in serviceaccount.json -out encoded_serviceaccount.txt` copy contents of this file to `.env` and **do not** commit the `txt` file.
+- `openssl base64 < serviceaccount.json -A | xclip -sel clipboard` paste contents of this file to `.env` on mac use `pbcopy` instead of `xclip`.
+- `openssl base64 -in serviceaccount.json -out encoded_serviceaccount.txt -A` copy contents of this file to `.env` and **do not** commit the `txt` file.
 
 Replace contents of `contract.abi.json` that you can get from [etherscan](https://rinkeby.etherscan.io/address/0x3f496D438aE2520ee839f3909ECeCcA40B4B22D3#code) of your deployed contract.
 
