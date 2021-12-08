@@ -4,5 +4,3 @@ node_modules
 /.svelte-kit
 /package
 .env
-src/routes/serviceaccount.json
-src/routes/novum-defi-dev.json
