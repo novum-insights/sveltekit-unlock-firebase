@@ -5,6 +5,8 @@ import { validKey, verifyMessage } from './_ethersAdapter';
 
 export const connectedClients = {};
 
+const validClaims = ['metamask_user', 'metamask_paid', 'stripe_paid'];
+
 const firebaseApp = admin.initializeApp({
 	//@ts-ignore
 	credential: admin.credential.cert(
@@ -61,23 +63,24 @@ const createUser = async (address: string) => {
 
 const checkUser = async (uid: string) => await authClient.getUser(uid).then((user) => user);
 
-const addClaim = async (address: string, claims?: any) =>
-	await authClient
-		.setCustomUserClaims(await getUidbyEmail(address), claims)
-		.then((e) => console.log(e));
+const addClaims = async (uid: string, claims?: any) =>
+	await authClient.setCustomUserClaims(uid, claims).then((e) => console.log(e));
 
 const destroyToken = async (address: string) => await authClient.revokeRefreshTokens(address);
 
 const getUidbyEmail = async (email: string) =>
 	await authClient.getUserByEmail(`${email}@metamask.io`).then((user) => user.uid);
 
-const getClaimsbyUid = async (uid: string) =>
-	await authClient.getUser(uid).then((user) => {
-		const claims = user.customClaims;
-		if (claims) {
-			return { claims };
-		} else {
-			return {};
+const getClaimsbyUid = async (uid: string, claim?: string) =>
+	await authClient.getUser(uid).then(async (user) => {
+		const obj = {};
+		try {
+			for (let i = 0; i < validClaims.length; i++) {
+				obj[validClaims[i]] = user.customClaims[validClaims[i]];
+			}
+			return obj;
+		} catch (error) {
+			return obj;
 		}
 	});
 const getAddressbyUid = async (uid: string) => {
@@ -90,7 +93,7 @@ const listAllUsers = async () => await authClient.listUsers(1).then((users) => u
 export {
 	createUser,
 	checkUser,
-	addClaim,
+	addClaims,
 	destroyToken,
 	getUidbyEmail,
 	getClaimsbyUid,
