@@ -13,3 +13,7 @@ export const validKey = async (account: string) => {
 
 export const verifyMessage = async (message: string, signature: string) =>
 	ethers.utils.verifyMessage(message, signature);
+
+export const transaction = async (hash: string) => await provider.getTransactionReceipt(hash);
+
+export const getBalance = async (account: string) => await provider.getBalance(account);

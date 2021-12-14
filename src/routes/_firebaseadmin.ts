@@ -31,7 +31,7 @@ const decodeAddress = async (message: string, signature: string) => {
 	// console.log({ token, uid, upgraded, address });
 	return { token, uid, upgraded };
 };
-
+// specific to metamask
 const createUser = async (address: string) => {
 	// creates user
 	let uid = '';
@@ -71,7 +71,7 @@ const destroyToken = async (address: string) => await authClient.revokeRefreshTo
 const getUidbyEmail = async (email: string) =>
 	await authClient.getUserByEmail(`${email}@metamask.io`).then((user) => user.uid);
 
-const getClaimsbyUid = async (uid: string, claim?: string) =>
+const getClaimsbyUid = async (uid: string) =>
 	await authClient.getUser(uid).then(async (user) => {
 		const obj = {};
 		try {

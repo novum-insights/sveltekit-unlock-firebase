@@ -7,7 +7,7 @@ At Novum we use Unlock to add membership our [momentum pairs](https://novuminsig
 
 - Use Metamask to log in via Firebase.
 - Uses both firebase-admin and firebase v9.
-- Firebase [custom claims](https://firebase.google.com/docs/auth/admin/custom-claims) for access to database.
+- Firebase [custom claims](https://firebase.google.com/docs/auth/admin/custom-claims) for access to Cloud Firestore.
 - Dockerized application.
 
 ## Setup

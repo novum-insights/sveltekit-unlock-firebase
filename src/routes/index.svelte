@@ -58,7 +58,7 @@
 		transactionHash = tx.hash;
 		if (transactionHash) {
 			let receipt = await provider.waitForTransaction(transactionHash, 5);
-			// logout and regenrate token
+			// logout and regenrate token || add claim to user
 			if (receipt) {
 				logOut({ reload: false }).then(() => metamaskSignIn());
 			}
