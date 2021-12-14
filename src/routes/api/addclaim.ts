@@ -1,16 +1,9 @@
-import { validKey } from '../_ethersAdapter';
-import { addClaim } from '../_firebaseadmin';
+import { addClaims } from '../_firebaseadmin';
 
 export async function post({ body }) {
-	const address = body.address;
-	let valid = await validKey(address);
-	if (valid) {
-		await addClaim(address, {
-			metamask_user: true,
-			metamask_paid: valid
-		});
-	}
+	const uid = body.uid;
+	const claims = body.claims;
 	return {
-		body: { upgraded: valid }
+		body: { upgraded: await addClaims(uid, claims) }
 	};
 }

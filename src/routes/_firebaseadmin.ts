@@ -1,15 +1,18 @@
+import { firebaseAdmin } from '$lib/contants';
 import admin from 'firebase-admin';
-import serviceAccount from './serviceaccount.json';
-import { validKey } from './_ethersAdapter';
+// import serviceAccount from './serviceaccount.json';
+import { validKey, verifyMessage } from './_ethersAdapter';
 
-const firebaseApp = admin.initializeApp(
-	{
-		//@ts-ignore
-		credential: admin.credential.cert(serviceAccount),
-		databaseURL: 'https://unlockprotocoldev.firebaseio.com'
-	},
-	'unlockprotocoldev'
-);
+export const connectedClients = {};
+
+const validClaims = ['metamask_user', 'metamask_paid', 'stripe_paid'];
+
+const firebaseApp = admin.initializeApp({
+	//@ts-ignore
+	credential: admin.credential.cert(
+		JSON.parse(Buffer.from(firebaseAdmin, 'base64').toString('ascii'))
+	)
+});
 const authClient = firebaseApp && firebaseApp.auth();
 // const dbClient = firebaseApp && firebaseApp.firestore();
 
@@ -20,7 +23,15 @@ const createToken = async (uid: string, claims?: any) => {
 		console.log(error);
 	}
 };
-
+const decodeAddress = async (message: string, signature: string) => {
+	const address = await verifyMessage(message, signature);
+	const token = await createUser(address);
+	const uid = await getUidbyEmail(address);
+	const upgraded = await validKey(address);
+	// console.log({ token, uid, upgraded, address });
+	return { token, uid, upgraded };
+};
+// specific to metamask
 const createUser = async (address: string) => {
 	// creates user
 	let uid = '';
@@ -30,6 +41,7 @@ const createUser = async (address: string) => {
 	};
 	let user: any = '';
 	//check user
+
 	try {
 		user = await checkUser(await getUidbyEmail(address)).then((user) => (uid = user.uid));
 		console.log('user exists');
@@ -51,10 +63,8 @@ const createUser = async (address: string) => {
 
 const checkUser = async (uid: string) => await authClient.getUser(uid).then((user) => user);
 
-const addClaim = async (address: string, claims?: any) =>
-	await authClient
-		.setCustomUserClaims(await getUidbyEmail(address), claims)
-		.then((e) => console.log(e));
+const addClaims = async (uid: string, claims?: any) =>
+	await authClient.setCustomUserClaims(uid, claims).then((e) => console.log(e));
 
 const destroyToken = async (address: string) => await authClient.revokeRefreshTokens(address);
 
@@ -62,22 +72,32 @@ const getUidbyEmail = async (email: string) =>
 	await authClient.getUserByEmail(`${email}@metamask.io`).then((user) => user.uid);
 
 const getClaimsbyUid = async (uid: string) =>
-	await authClient.getUser(uid).then((user) => {
-		const claims = user.customClaims;
-		if (claims) {
-			return { claims };
-		} else {
-			return {};
+	await authClient.getUser(uid).then(async (user) => {
+		const obj = {};
+		try {
+			for (let i = 0; i < validClaims.length; i++) {
+				obj[validClaims[i]] = user.customClaims[validClaims[i]];
+			}
+			return obj;
+		} catch (error) {
+			return obj;
 		}
 	});
-
+const getAddressbyUid = async (uid: string) => {
+	const user = await authClient.getUser(uid);
+	const email = user.email;
+	const [address, _] = email.split('@');
+	return address;
+};
 const listAllUsers = async () => await authClient.listUsers(1).then((users) => users);
 export {
 	createUser,
 	checkUser,
-	addClaim,
+	addClaims,
 	destroyToken,
 	getUidbyEmail,
 	getClaimsbyUid,
-	listAllUsers
+	listAllUsers,
+	decodeAddress,
+	getAddressbyUid
 };

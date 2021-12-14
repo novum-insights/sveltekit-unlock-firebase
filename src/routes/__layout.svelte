@@ -1,17 +1,22 @@
 <script>
 	import { authChanged } from '$lib/firebase';
-	import { firebaseEnv } from '$lib/stores';
 
 	import { onMount } from 'svelte';
+	import '../app.css';
 
 	onMount(() => {
-		if ($firebaseEnv.firebaseControlled) authChanged();
+		authChanged();
 	});
-
 </script>
 
 <svelte:head>
 	<title>Sveltekit Unlock Protocol + Firebase Auth with Metamask Demo</title>
 </svelte:head>
 
-<slot />
+<main>
+	<slot />
+</main>
+
+<style>
+
+</style>

@@ -4,4 +4,3 @@ node_modules
 /.svelte-kit
 /package
 .env
-src/routes/serviceaccount.json

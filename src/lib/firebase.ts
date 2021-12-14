@@ -13,9 +13,10 @@ import {
 	unlink
 } from 'firebase/auth';
 import { base } from '$app/paths';
-import { currentUser, firebaseEnv } from '$lib/stores';
+import { currentUser, firebaseEnv, isLoggingIn, signature } from '$lib/stores';
 import { get } from 'svelte/store';
 import { firebaseConfig } from './contants';
+import { ethereum } from './web3';
 // console.log('firebase');
 
 const firebaseApp: any =
@@ -57,16 +58,22 @@ async function loginWithGoogle() {
 		});
 }
 
-async function signIn() {
+async function metamaskSignIn() {
 	const auth = getAuth();
 	const { address }: any = get(currentUser);
+	// let address: any = '';
+	// currentUser.subscribe((e) => (address = e.address));
 
-	let { token, uid, upgraded } = await fetch(`${base}/api/address`, {
+	isLoggingIn.set(true);
+	let message = '';
+	signature.subscribe((e) => (message = e));
+	// console.log({ message });
+	let { token, uid, upgraded } = await fetch(`${base}/api/login`, {
 		method: 'post',
 		headers: {
 			'Content-Type': 'application/json'
 		},
-		body: JSON.stringify({ address })
+		body: JSON.stringify({ message })
 	})
 		.then((e) => e.json())
 		.then((e) => e);
@@ -86,6 +93,8 @@ async function signIn() {
 					uid,
 					upgraded
 				});
+				isLoggingIn.set(false);
+
 				// // console.log(result);
 				return { creds };
 			})
@@ -141,12 +150,12 @@ async function unLinkProviders() {
 		});
 }
 
-const logOut = async () => {
+const logOut = async ({ reload = true }) => {
 	const auth = getAuth();
 	// await fetch('logout');
 
 	//refresh on logout
-	window.location.reload();
+	reload && window.location.reload();
 	await signOut(auth)
 		.then(() => {})
 		.catch((error) => {
@@ -163,12 +172,15 @@ const authChanged = () => {
 
 	onAuthStateChanged(auth, async (user) => {
 		// setPersistence(auth, browserSessionPersistence).then(() => signIn());
-	
-		const { upgraded } = await fetch(`${base}/api/validkey`, {
-			method: 'post',
-			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify({ address })
-		}).then((e) => e.json());
+
+		const { upgraded } =
+			ethereum && address
+				? await fetch(`${base}/api/validkey`, {
+						method: 'post',
+						headers: { 'Content-Type': 'application/json' },
+						body: JSON.stringify({ address })
+				  }).then((e) => e.json())
+				: false;
 		if (user) {
 			// User is signed in, see docs for a list of available properties
 			// https://firebase.google.com/docs/reference/js/firebase.User
@@ -217,7 +229,7 @@ const readDoc = async (path: string) => {
 export {
 	firebaseApp,
 	db,
-	signIn,
+	metamaskSignIn,
 	loginWithGoogle,
 	readDoc,
 	logOut,
