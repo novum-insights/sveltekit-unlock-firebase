@@ -1,16 +1,40 @@
-FROM node:16-alpine AS build
+### Build Step
+# pull the Node.js Docker image
+FROM node:14-alpine as builder
 
-RUN mkdir -p /app
 
+# change working directory
+WORKDIR /usr/src/app
+
+RUN npm install -g pnpm
+
+# copy the package.json files from local machine to the workdir in container
+COPY package.json pnpm-lock.yaml ./
+
+# run npm install in our local machine
+RUN pnpm i --frozen-lockfile
+
+
+# copy the generated modules and all other files to the container
+COPY . .
+
+# build the application
+RUN pnpm build
+
+### Serve Step
+# pull the Node.js Docker image
+FROM node:14-alpine
+
+# change working directory
 WORKDIR /app
 
-COPY . .
-RUN npm install
+# copy files from previous step
+COPY --from=builder /usr/src/app/build .
+COPY --from=builder /usr/src/app/package.json .
+COPY --from=builder /usr/src/app/node_modules ./node_modules
 
-# EXPOSE 80/tcp
+# our app is running on port 3000 within the container, so need to expose it
 EXPOSE 3000
 
-
-# CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0", "--port", "80"]
-
-RUN npm run build
+# the command that starts our app
+CMD ["node", "index.js"]

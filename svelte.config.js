@@ -9,18 +9,11 @@ const config = {
 
 	kit: {
 		// hydrate the <div id="svelte"> element in src/app.html
-		target: '#svelte',
 		prerender: {
 			enabled: false
 		},
-		ssr: false,
 		floc: true,
-		vite: {
-			ssr: {
-				external: ['firebase', 'firebase-admin'],
-				noExternal: process.env.NODE_ENV === 'production' && ['ethers']
-			}
-		},
+	
 		adapter: adapter({
 			// default options are shown
 			out: 'build',
