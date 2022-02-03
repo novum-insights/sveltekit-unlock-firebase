@@ -10,7 +10,8 @@ import {
 	GoogleAuthProvider,
 	signInWithPopup,
 	linkWithPopup,
-	unlink
+	unlink,
+	onIdTokenChanged
 } from 'firebase/auth';
 import { base } from '$app/paths';
 import { currentUser, firebaseEnv, isLoggingIn, signature } from '$lib/stores';
@@ -77,15 +78,14 @@ async function metamaskSignIn() {
 	})
 		.then((e) => e.json())
 		.then((e) => e);
+
 	if (token && uid) {
 		signInWithCustomToken(auth, token)
 			.then(async (creds: any) => {
 				// Signed in..
 				// console.log(user);
-				// const result = await auth.currentUser.getIdTokenResult(true);
-				// console.log(result.claims);
-				// console.log(token);
 
+				// console.log({ creds });
 				currentUser.set({
 					address,
 					user: creds.user,
@@ -152,15 +152,8 @@ async function unLinkProviders() {
 
 const logOut = async ({ reload = true }) => {
 	const auth = getAuth();
-	// await fetch('logout');
-
-	//refresh on logout
 	reload && window.location.reload();
-	await signOut(auth)
-		.then(() => {})
-		.catch((error) => {
-			console.log(error);
-		});
+	await signOut(auth);
 };
 const authChanged = () => {
 	// const { address }: any = get(currentUser);
@@ -170,7 +163,7 @@ const authChanged = () => {
 
 	const auth = getAuth();
 
-	onAuthStateChanged(auth, async (user) => {
+	onIdTokenChanged(auth, async (user) => {
 		// setPersistence(auth, browserSessionPersistence).then(() => signIn());
 
 		const { upgraded } =
@@ -182,11 +175,9 @@ const authChanged = () => {
 				  }).then((e) => e.json())
 				: false;
 		if (user) {
-			// User is signed in, see docs for a list of available properties
-			// https://firebase.google.com/docs/reference/js/firebase.User
+			const result = await auth.currentUser.getIdToken();
+			await setToken(result);
 			const uid = user.uid;
-			// ...
-
 			currentUser.set({
 				address,
 				user,
@@ -197,7 +188,7 @@ const authChanged = () => {
 		} else {
 			// User is signed out
 			// ...
-
+			await setToken('');
 			currentUser.set({
 				address,
 				user: null,
@@ -208,6 +199,16 @@ const authChanged = () => {
 		}
 	});
 };
+
+async function setToken(token: string) {
+	await fetch(`${base}/api/setuser`, {
+		method: 'post',
+		headers: {
+			'Content-Type': 'application/json'
+		},
+		body: JSON.stringify({ token })
+	});
+}
 
 const readDoc = async (path: string) => {
 	let [collection, document] = path.split('/');

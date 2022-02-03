@@ -1,4 +1,18 @@
+<script context="module" lang="ts">
+	export async function load({ session }) {
+		const { user } = session;
+		return {
+			props: {
+				user
+			}
+		};
+	}
+</script>
+
 <script lang="ts">
+	export let user;
+
+	console.log('client', user);
 	import { loginWithGoogle, logOut, readDoc, metamaskSignIn } from '$lib/firebase';
 	import { currentUser, isLoggingIn, signature } from '$lib/stores';
 
@@ -143,8 +157,8 @@
 	<p>Logging in...</p>
 {/if}
 <code>
-	<pre>{logs ?JSON.stringify(logs, null, 2) :''}</pre>
+	<pre>{logs ? JSON.stringify(logs, null, 2) : ''}</pre>
 </code>
 <code>
-	<pre>{error ?JSON.stringify(error, null, 2) :''}</pre>
+	<pre>{error ? JSON.stringify(error, null, 2) : ''}</pre>
 </code>

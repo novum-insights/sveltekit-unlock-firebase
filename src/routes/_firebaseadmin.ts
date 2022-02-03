@@ -8,7 +8,6 @@ export const connectedClients = {};
 const validClaims = ['metamask_user', 'metamask_paid', 'stripe_paid'];
 
 const firebaseApp = admin.initializeApp({
-	//@ts-ignore
 	credential: admin.credential.cert(
 		JSON.parse(Buffer.from(firebaseAdmin, 'base64').toString('ascii'))
 	)
@@ -18,7 +17,9 @@ const authClient = firebaseApp && firebaseApp.auth();
 
 const createToken = async (uid: string, claims?: any) => {
 	try {
-		return await authClient.createCustomToken(uid, claims);
+		const token = await authClient.createCustomToken(uid, claims);
+		console.log({ token });
+		return token;
 	} catch (error) {
 		console.log(error);
 	}
@@ -55,7 +56,6 @@ const createUser = async (address: string) => {
 			.then(async (e) => {
 				uid = e.uid;
 				let token = await createToken(uid, claims);
-
 				return token;
 			});
 	}
@@ -90,6 +90,18 @@ const getAddressbyUid = async (uid: string) => {
 	return address;
 };
 const listAllUsers = async () => await authClient.listUsers(1).then((users) => users);
+
+const decodeToken = async (token: string) => {
+	if (!token || token === 'null' || token === 'undefined') return null;
+	try {
+		const decoded = await authClient.verifyIdToken(token);
+		return decoded;
+	} catch (error) {
+		console.log(error);
+		return null;
+	}
+};
+
 export {
 	createUser,
 	checkUser,
@@ -99,5 +111,6 @@ export {
 	getClaimsbyUid,
 	listAllUsers,
 	decodeAddress,
-	getAddressbyUid
+	getAddressbyUid,
+	decodeToken
 };
