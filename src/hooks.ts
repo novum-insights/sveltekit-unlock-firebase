@@ -15,7 +15,6 @@ export async function handle({ event, resolve }) {
 }
 
 export function getSession({ locals }) {
-	console.log(locals.user);
 	return {
 		user: locals.user && {
 			...locals.user
