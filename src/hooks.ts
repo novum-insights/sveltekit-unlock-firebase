@@ -12,11 +12,14 @@ export async function handle({ event, resolve }) {
 		email: user.email.includes('@metamask.io') ? null : user.email,
 		address: user.email.includes('@metamask.io') ? user.email.split('@metamask.io')[0] : null,
 		claims: {
-			metamask_paid: await validKey(user.email.split('@metamask.io')[0]),
-			metamask_user: user.metamask_user,
+			metamask_paid: user.email.includes('@metamask.io')
+				? await validKey(user.email.split('@metamask.io')[0])
+				: false,
+			metamask_user: user.email.includes('@metamask.io') ? true : false,
 			stripe_paid: user.stripe_paid
 		}
 	};
+	
 	event.locals = {
 		user: token ? userData : null
 	};
