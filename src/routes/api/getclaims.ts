@@ -1,4 +1,4 @@
-import { getClaimsbyUid } from '../_firebaseadmin';
+import { getClaimsbyUid } from '$lib/server/_firebaseadmin';
 
 export async function post({ body }) {
 	const uid = body.uid;

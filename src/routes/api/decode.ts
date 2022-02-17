@@ -1,6 +1,6 @@
 import { secureMessage } from '$lib/contants';
-import { verifyMessage } from '../_ethersAdapter';
-import { connectedClients } from '../_firebaseadmin';
+import { verifyMessage } from '$lib/server/_ethersAdapter';
+import { connectedClients } from '$lib/server/_firebaseadmin';
 
 export async function post({ body }) {
 	const signature = body.signature;

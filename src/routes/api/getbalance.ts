@@ -1,6 +1,6 @@
 import { BigNumber } from 'ethers';
 import { formatEther } from 'ethers/lib/utils';
-import { getBalance } from '../_ethersAdapter';
+import { getBalance } from '$lib/server/_ethersAdapter';
 
 export async function post({ body }) {
 	const address = body.address;
