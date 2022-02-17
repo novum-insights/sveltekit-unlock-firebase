@@ -1,4 +1,4 @@
-import { listAllUsers } from '../_firebaseadmin';
+import { listAllUsers } from '$lib/server/_firebaseadmin';
 
 export async function post(req) {
 	let users = await listAllUsers();

@@ -1,4 +1,4 @@
-import { transaction } from '../_ethersAdapter';
+import { transaction } from '$lib/server/_ethersAdapter';
 
 export async function post({ body }) {
 	const hash = body.hash;

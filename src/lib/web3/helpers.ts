@@ -1,3 +1,4 @@
+import { secureMessage } from '$lib/contants';
 import { ethereum } from '.';
 
 async function connect() {
@@ -41,5 +42,12 @@ async function requestNetwork({ chainId }) {
 		return error;
 	}
 }
-
-export { connect, requestNetwork };
+async function handleSignMessage(signer: any, address?: string, nonce?: string) {
+	try {
+		const signature = await signer.signMessage(`${secureMessage}`);
+		return signature;
+	} catch (err) {
+		throw new Error('You need to sign the message to be able to log in.');
+	}
+}
+export { connect, requestNetwork, handleSignMessage };

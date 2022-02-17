@@ -5,20 +5,21 @@ import { validKey, verifyMessage } from './_ethersAdapter';
 
 export const connectedClients = {};
 
-const validClaims = ['metamask_user', 'metamask_paid', 'stripe_paid'];
+const validClaims = ['metamask_user', 'stripe_paid'];
 
-const firebaseApp = admin.initializeApp({
-	credential: admin.credential.cert(
-		JSON.parse(Buffer.from(firebaseAdmin, 'base64').toString('ascii'))
-	)
-});
+const firebaseApp =
+	!admin.apps.length &&
+	admin.initializeApp({
+		credential: admin.credential.cert(
+			JSON.parse(Buffer.from(firebaseAdmin, 'base64').toString('ascii'))
+		)
+	});
 const authClient = firebaseApp && firebaseApp.auth();
 // const dbClient = firebaseApp && firebaseApp.firestore();
 
 const createToken = async (uid: string, claims?: any) => {
 	try {
 		const token = await authClient.createCustomToken(uid, claims);
-		console.log({ token });
 		return token;
 	} catch (error) {
 		console.log(error);
@@ -102,6 +103,26 @@ const decodeToken = async (token: string) => {
 	}
 };
 
+const revokeToken = async (uid: string) => await authClient.revokeRefreshTokens(uid);
+
+const sessionCookie = async (token: string) => {
+	if (!token || token === 'null' || token === 'undefined') return null;
+	return await authClient
+		.createSessionCookie(token, { expiresIn: 60 * 60 * 24 * 5 * 1000 }) // 5 days cookie
+		.then((cookie) => cookie);
+};
+
+const verifyCookie = async (cookie: string) => {
+	if (!cookie || cookie === 'null' || cookie === 'undefined') return null;
+
+	try {
+		return await authClient.verifySessionCookie(cookie, true).then((user) => user);
+	} catch (error) {
+		console.log(error);
+		return null;
+	}
+};
+
 export {
 	createUser,
 	checkUser,
@@ -112,5 +133,8 @@ export {
 	listAllUsers,
 	decodeAddress,
 	getAddressbyUid,
-	decodeToken
+	decodeToken,
+	revokeToken,
+	sessionCookie,
+	verifyCookie
 };

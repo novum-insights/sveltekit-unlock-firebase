@@ -1,4 +1,4 @@
-import { connectedClients } from '../_firebaseadmin';
+import { connectedClients } from '$lib/server/_firebaseadmin';
 export async function post({ request }) {
 	const { address } = await request.json();
 	const nonce = Math.floor(Math.random() * 100000);

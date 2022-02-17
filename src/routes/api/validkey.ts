@@ -1,4 +1,4 @@
-import { validKey } from '../_ethersAdapter';
+import { validKey } from '$lib/server/_ethersAdapter';
 
 export async function post({ request }) {
 	const { address } = await request.json();

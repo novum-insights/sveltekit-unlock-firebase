@@ -16,8 +16,8 @@ import {
 import { base } from '$app/paths';
 import { currentUser, firebaseEnv, isLoggingIn, signature } from '$lib/stores';
 import { get } from 'svelte/store';
-import { firebaseConfig } from './contants';
-import { ethereum } from './web3';
+import { firebaseConfig } from '$lib/contants';
+import { ethereum } from '../web3';
 // console.log('firebase');
 
 const firebaseApp: any =
@@ -39,11 +39,8 @@ async function loginWithGoogle() {
 			const user = result.user;
 
 			currentUser.set({
-				address: '',
 				user,
-				loggedIn: true,
-				uid: user.uid,
-				upgraded: false
+				uid: user.uid
 			});
 			// ...
 		})
@@ -79,7 +76,7 @@ async function metamaskSignIn() {
 		.then((e) => e.json())
 		.then((e) => e);
 
-	if (token && uid) {
+	if (token) {
 		signInWithCustomToken(auth, token)
 			.then(async (creds: any) => {
 				// Signed in..
@@ -87,14 +84,13 @@ async function metamaskSignIn() {
 
 				// console.log({ creds });
 				currentUser.set({
-					address,
 					user: creds.user,
-					loggedIn: false,
-					uid,
-					upgraded
+					uid
 				});
 				isLoggingIn.set(false);
-
+				const idTokenResult = await auth.currentUser.getIdTokenResult(true);
+				const { success } = await setToken(idTokenResult.token);
+				if (success) window.location.reload();
 				// // console.log(result);
 				return { creds };
 			})
@@ -122,10 +118,7 @@ async function linkProviders() {
 			const credential = GoogleAuthProvider.credentialFromResult(result);
 
 			currentUser.set({
-				upgraded: false,
-				address,
 				user,
-				loggedIn: true,
 				uid: user.uid
 			});
 		})
@@ -152,62 +145,45 @@ async function unLinkProviders() {
 
 const logOut = async ({ reload = true }) => {
 	const auth = getAuth();
-	reload && window.location.reload();
+	await setToken('');
 	await signOut(auth);
+	reload && window.location.reload();
 };
 const authChanged = () => {
 	// const { address }: any = get(currentUser);
 	// store is hot here so cannot use get(currentUser)
-	let address: any = '';
-	currentUser.subscribe((e) => (address = e.address));
 
 	const auth = getAuth();
 
 	onIdTokenChanged(auth, async (user) => {
 		// setPersistence(auth, browserSessionPersistence).then(() => signIn());
 
-		const { upgraded } =
-			ethereum && address
-				? await fetch(`${base}/api/validkey`, {
-						method: 'post',
-						headers: { 'Content-Type': 'application/json' },
-						body: JSON.stringify({ address })
-				  }).then((e) => e.json())
-				: false;
 		if (user) {
-			const result = await auth.currentUser.getIdToken();
-			await setToken(result);
 			const uid = user.uid;
 			currentUser.set({
-				address,
 				user,
-				loggedIn: true,
-				uid: user.uid,
-				upgraded
+				uid: user.uid
 			});
 		} else {
 			// User is signed out
 			// ...
 			await setToken('');
 			currentUser.set({
-				address,
 				user: null,
-				loggedIn: false,
-				uid: null,
-				upgraded: false
+				uid: null
 			});
 		}
 	});
 };
 
 async function setToken(token: string) {
-	await fetch(`${base}/api/setuser`, {
+	return await fetch(`${base}/api/getcookie`, {
 		method: 'post',
 		headers: {
 			'Content-Type': 'application/json'
 		},
 		body: JSON.stringify({ token })
-	});
+	}).then((e) => e.json());
 }
 
 const readDoc = async (path: string) => {
