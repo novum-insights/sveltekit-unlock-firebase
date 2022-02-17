@@ -39,7 +39,7 @@ const createUser = async (address: string) => {
 	let uid = '';
 	const claims = {
 		metamask_user: true,
-		metamask_paid: await validKey(address)
+		// metamask_paid: await validKey(address)
 	};
 	let user: any = '';
 	//check user

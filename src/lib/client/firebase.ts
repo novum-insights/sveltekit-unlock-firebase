@@ -30,14 +30,20 @@ firebaseEnv.set({
 async function loginWithGoogle() {
 	const provider = new GoogleAuthProvider();
 	const auth = getAuth();
+
 	signInWithPopup(auth, provider)
-		.then((result) => {
+		.then(async (result) => {
 			// This gives you a Google Access Token. You can use it to access the Google API.
 			const credential = GoogleAuthProvider.credentialFromResult(result);
 			const token = credential.accessToken;
 			// The signed-in user info.
 			const user = result.user;
-
+			const idToken = await auth.currentUser.getIdToken(true);
+			console.log({ idToken });
+			const { success } = await setToken(idToken);
+			if (success) {
+				window.location.reload();
+			}
 			currentUser.set({
 				user,
 				uid: user.uid
@@ -90,7 +96,9 @@ async function metamaskSignIn() {
 				isLoggingIn.set(false);
 				const idTokenResult = await auth.currentUser.getIdTokenResult(true);
 				const { success } = await setToken(idTokenResult.token);
-				if (success) window.location.reload();
+				if (success) {
+					window.location.reload();
+				}
 				// // console.log(result);
 				return { creds };
 			})
