@@ -1,6 +1,10 @@
 {
 	"name": "sveltekit-firebase-ethers",
 	"version": "0.0.1",
+	"engines": {
+		"node":">=16.0.0",
+		"npm":">=8.0.0"
+	},
 	"scripts": {
 		"dev": "svelte-kit dev",
 		"build": "svelte-kit build",
