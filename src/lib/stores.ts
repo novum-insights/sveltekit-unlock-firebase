@@ -2,7 +2,7 @@ import { writable } from 'svelte/store';
 
 export const currentUser = writable({
 	user: null,
-	uid: ''
+	uid: null
 });
 
 export const firebaseEnv = writable({
