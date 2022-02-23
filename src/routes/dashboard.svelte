@@ -1,10 +1,10 @@
 <script context="module">
 	export async function load({ session, fetch }) {
 		const { user } = session;
+	
 		const response = await fetch(`/api/stripe`, {
 			method: 'POST',
 			headers: {
-				Accept: 'application/json',
 				'Content-Type': 'application/json'
 			},
 			body: JSON.stringify({

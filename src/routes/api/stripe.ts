@@ -9,7 +9,7 @@ const stripe = new Stripe(stripeSecretKey, {
 // handle POST /create-payment-intent
 export async function post({ request }) {
 	// create the payment intent
-	const { uid } = request.json();
+	const { uid } = await request.json();
 	const paymentIntent = await stripe.paymentIntents.create({
 		amount: 30000,
 		// note, for some EU-only payment methods it must be EUR
