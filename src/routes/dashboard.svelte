@@ -1,9 +1,21 @@
 <script context="module">
-	export async function load({ session }) {
+	export async function load({ session, fetch }) {
 		const { user } = session;
+		const response = await fetch(`/api/stripe`, {
+			method: 'POST',
+			headers: {
+				Accept: 'application/json',
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify({
+				uid: user.uid
+			})
+		});
+		const { clientSecret } = await response.json();
 		return {
 			props: {
-				user
+				user,
+				clientSecret
 			}
 		};
 	}
@@ -14,7 +26,7 @@
 
 	import Purchase from '$lib/common/Purchase.svelte';
 	export let user: any;
-
+	export let clientSecret: string;
 	$: subscriptionType = user ? (user.claims.metamask_user ? 'ether' : 'stripe') : null; // <- this is the subscription mode to buy with
 
 	$: hasUserPaid = user ? user.claims.metamask_paid || user.claims.stripe_paid : null;
@@ -39,5 +51,5 @@
 	{/if}
 {:else}
 	<p>You need the membership to unlock this content.</p>
-	<Purchase {subscriptionType} {account} {uid} />
+	<Purchase {subscriptionType} {account} {uid} {clientSecret} />
 {/if}

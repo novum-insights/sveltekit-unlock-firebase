@@ -2,15 +2,17 @@
 	export let subscriptionType: string = 'ether'; // Stripe payments if user logs in with a email account
 	export let account: string = '';
 	export let uid: string = '';
+	export let clientSecret;
 	import { contract } from '$lib/contants';
 
 	import { getPrice, purchase } from '$lib/unlock/utils';
 	import { CONTRACT, ethereum, provider, signer } from '$lib/web3';
 	import ABI from '$lib/contract.abi.json';
-	import { base } from '$app/paths';
-	import { logOut, metamaskSignIn } from '$lib/client/firebase';
+	import { loginWithGoogle, logOut, metamaskSignIn } from '$lib/client/firebase';
 	import { signature } from '$lib/stores';
 	import { handleSignMessage } from '$lib/web3/helpers';
+	import Stripe from '$lib/vendor/Stripe.svelte';
+	import { base } from '$app/paths';
 
 	const CONTRACT_ADDRESS = contract;
 
@@ -32,24 +34,16 @@
 					{
 						metamask_paid: true
 					},
-					false
+					false,
+					'metamask'
 				);
 			}
 
 			// logout and regenrate token || add claim to user
 		}
 	}
-	async function buyStripe() {
-		console.log('Stripe payment');
-		await setClaims(
-			{
-				stripe_paid: true
-			},
-			false
-		);
-	}
 
-	async function setClaims(claims: object, reload: boolean) {
+	async function setClaims(claims: object, reload: boolean, provider: string) {
 		await fetch(`${base}/api/addclaim`, {
 			method: 'POST',
 			headers: {
@@ -63,7 +57,13 @@
 			.then((e) => e.json())
 			.then((e) => {
 				console.log(e);
-				logOut({ reload }).then(() => signWithMessage());
+				logOut({ reload }).then(() => {
+					if (provider === 'metamask') {
+						signWithMessage();
+					} else {
+						loginWithGoogle();
+					}
+				});
 			});
 	}
 	async function signWithMessage() {
@@ -79,11 +79,32 @@
 		$signature = await handleSignMessage(signer, data.address, data.nonce);
 		await metamaskSignIn();
 	}
+
+	// Stripe stuff
+
+	export let id = '';
+	export let status = '';
+	async function buyStripe() {
+		console.log('Stripe payment');
+		await setClaims(
+			{
+				stripe_paid: true
+			},
+			false,
+			'stripe'
+		);
+	}
+	$: console.log({ id, status });
+	$: if (status === 'succeeded') {
+		buyStripe();
+	}
 </script>
 
 {#if subscriptionType == 'ether' && ethereum}
 	<button on:click={buyUnlock}> Purchase with ETH </button>
 	<p>{debugMessage}</p>
 {:else}
-	<button on:click={buyStripe}> Purchase with Stripe </button>
+	<Stripe {clientSecret} {account} bind:id bind:status>
+		<!-- <button on:click={buyStripe}> Purchase with Stripe </button> -->
+	</Stripe>
 {/if}

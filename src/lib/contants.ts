@@ -10,4 +10,6 @@ const firebaseConfig = {
 const rpcProvider: any = import.meta.env.VITE_RPC_PROVIDER;
 const secureMessage: any = import.meta.env.VITE_SECURE_MESSAGE;
 const firebaseAdmin: any = import.meta.env.VITE_FIREBASE_ADMIN;
-export { contract, firebaseConfig, rpcProvider, secureMessage, firebaseAdmin };
+const stripeSecretKey: any = import.meta.env.VITE_STRIPE_SECRET_KEY;
+const stripePubKey: any = import.meta.env.VITE_STRIPE_PUBLIC_KEY;
+export { contract, firebaseConfig, rpcProvider, secureMessage, firebaseAdmin, stripeSecretKey, stripePubKey };
