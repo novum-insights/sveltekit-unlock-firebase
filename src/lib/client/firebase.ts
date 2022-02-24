@@ -11,7 +11,8 @@ import {
 	signInWithPopup,
 	linkWithPopup,
 	unlink,
-	onIdTokenChanged
+	onIdTokenChanged,
+	linkWithRedirect
 } from 'firebase/auth';
 import { base } from '$app/paths';
 import { currentUser, firebaseEnv, isLoggingIn, signature } from '$lib/stores';
@@ -112,43 +113,38 @@ async function metamaskSignIn() {
 }
 
 async function linkProviders() {
-	const { address }: any = get(currentUser);
-	const { user } = get(currentUser);
-
 	const provider = new GoogleAuthProvider();
 	const auth = getAuth();
+	console.log('linkProviders', auth.currentUser);
 
-	linkWithPopup(auth.currentUser, provider)
-		.then(async (result) => {
-			// Accounts successfully linked.
-
-			const user = result.user;
+	await linkWithPopup(auth.currentUser, provider).then(async (result) => {
+		console.log(result);
+		const user = result.user;
+		try {
 			const credential = GoogleAuthProvider.credentialFromResult(result);
-
-			currentUser.set({
-				user,
-				uid: user.uid
-			});
-		})
-		.catch((error) => {
-			// Handle Errors here.
-			// ...
-		});
+			window.location.reload()
+			return credential;
+		} catch (error) {
+			console.log(error);
+		}
+	});
 }
 
 async function unLinkProviders() {
-	const { address }: any = get(currentUser);
 	const auth = getAuth();
-	unlink(auth.currentUser, GoogleAuthProvider.PROVIDER_ID)
+	const data = unlink(auth.currentUser, GoogleAuthProvider.PROVIDER_ID)
 		.then((e) => {
 			// Auth provider unlinked from account
 			// ...
 			console.log(e);
+			return e;
 		})
 		.catch((error) => {
 			// An error happened
 			// ...
+			return error;
 		});
+	console.log(await data);
 }
 
 const logOut = async ({ reload = true }) => {
