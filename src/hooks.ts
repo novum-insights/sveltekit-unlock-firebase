@@ -6,7 +6,7 @@ export async function handle({ event, resolve }) {
 	const cookies = parse(event.request.headers.get('cookie') || '');
 	const token = cookies.session;
 	const user = await verifyCookie(token);
-
+	// console.log(JSON.stringify(user));
 	const userData = user && {
 		uid: user.uid,
 		email: user.email.includes('@metamask.io') ? null : user.email,
@@ -17,9 +17,10 @@ export async function handle({ event, resolve }) {
 				: false,
 			metamask_user: user.email.includes('@metamask.io') ? true : false,
 			stripe_paid: user.stripe_paid
-		}
+		},
+		identities: user.firebase.identities
 	};
-	
+
 	event.locals = {
 		user: token ? userData : null
 	};

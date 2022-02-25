@@ -5,7 +5,6 @@ import { getFirestore, doc, getDoc } from 'firebase/firestore/lite';
 import {
 	getAuth,
 	signInWithCustomToken,
-	onAuthStateChanged,
 	signOut,
 	GoogleAuthProvider,
 	signInWithPopup,
@@ -15,10 +14,7 @@ import {
 } from 'firebase/auth';
 import { base } from '$app/paths';
 import { currentUser, firebaseEnv, isLoggingIn, signature } from '$lib/stores';
-import { get } from 'svelte/store';
 import { firebaseConfig } from '$lib/contants';
-import { ethereum } from '../web3';
-// console.log('firebase');
 
 const firebaseApp: any =
 	browser && (getApps().length === 0 ? initializeApp(firebaseConfig) : getApp());
@@ -62,17 +58,13 @@ async function loginWithGoogle() {
 		});
 }
 
-async function metamaskSignIn() {
+async function metamaskSignIn(reload = true) {
 	const auth = getAuth();
-	const { address }: any = get(currentUser);
-	// let address: any = '';
-	// currentUser.subscribe((e) => (address = e.address));
 
 	isLoggingIn.set(true);
 	let message = '';
 	signature.subscribe((e) => (message = e));
-	// console.log({ message });
-	let { token, uid, upgraded } = await fetch(`${base}/api/login`, {
+	let { token, uid } = await fetch(`${base}/api/login`, {
 		method: 'post',
 		headers: {
 			'Content-Type': 'application/json'
@@ -83,12 +75,8 @@ async function metamaskSignIn() {
 		.then((e) => e);
 
 	if (token) {
-		signInWithCustomToken(auth, token)
+		return await signInWithCustomToken(auth, token)
 			.then(async (creds: any) => {
-				// Signed in..
-				// console.log(user);
-
-				// console.log({ creds });
 				currentUser.set({
 					user: creds.user,
 					uid
@@ -96,59 +84,59 @@ async function metamaskSignIn() {
 				isLoggingIn.set(false);
 				const idTokenResult = await auth.currentUser.getIdTokenResult(true);
 				const { success } = await setToken(idTokenResult.token);
-				if (success) {
+				if (success && reload) {
 					window.location.reload();
 				}
-				// // console.log(result);
-				return { creds };
+
+				return { creds, idTokenResult };
 			})
 			.catch((error) => {
 				const errorCode = error.code;
 				const errorMessage = error.message;
 				console.log(error);
 				// ...
+				return error;
 			});
 	}
 }
 
+async function linkWeb3Provider() {
+	const { token } = await metamaskSignIn(false);
+	console.log(token);
+}
 async function linkProviders() {
-	const { address }: any = get(currentUser);
-	const { user } = get(currentUser);
-
 	const provider = new GoogleAuthProvider();
 	const auth = getAuth();
+	console.log('linkProviders', auth.currentUser);
 
-	linkWithPopup(auth.currentUser, provider)
-		.then(async (result) => {
-			// Accounts successfully linked.
-
-			const user = result.user;
+	await linkWithPopup(auth.currentUser, provider).then(async (result) => {
+		console.log(result);
+		const user = result.user;
+		try {
 			const credential = GoogleAuthProvider.credentialFromResult(result);
-
-			currentUser.set({
-				user,
-				uid: user.uid
-			});
-		})
-		.catch((error) => {
-			// Handle Errors here.
-			// ...
-		});
+			window.location.reload();
+			return credential;
+		} catch (error) {
+			console.log(error);
+		}
+	});
 }
 
 async function unLinkProviders() {
-	const { address }: any = get(currentUser);
 	const auth = getAuth();
-	unlink(auth.currentUser, GoogleAuthProvider.PROVIDER_ID)
+	const data = unlink(auth.currentUser, GoogleAuthProvider.PROVIDER_ID)
 		.then((e) => {
 			// Auth provider unlinked from account
 			// ...
 			console.log(e);
+			return e;
 		})
 		.catch((error) => {
 			// An error happened
 			// ...
+			return error;
 		});
+	console.log(await data);
 }
 
 const logOut = async ({ reload = true }) => {
@@ -220,5 +208,6 @@ export {
 	logOut,
 	authChanged,
 	linkProviders,
+	linkWeb3Provider,
 	unLinkProviders
 };
