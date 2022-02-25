@@ -17,7 +17,8 @@
 </script>
 
 <script lang="ts">
-	import { linkProviders } from '$lib/client/firebase';
+	import { linkProviders, linkWeb3Provider } from '$lib/client/firebase';
+	import { ethereum } from '$lib/web3';
 
 	export let user;
 
@@ -25,21 +26,39 @@
 	$: isGoogle = user.providerData.find((provider) => provider.providerId.includes('google.com'));
 
 	let showDebug = false;
+
+    
 </script>
 
 {#if !isGoogle}
 	<p>Link your web3 with google login.</p>
 	<button on:click={linkProviders}> Link google </button>
 {:else}
-	<p>You have linked your web3 account with google.</p>
+	<p>Link your web3 with google login.</p>
+	{#if ethereum}
+		<button on:click={linkWeb3Provider}> Link Web3 </button>
+	{:else}
+		<p>You need a web3 compatible browser or extension to use this feature.</p>
+		<p>
+			Consider installing MetaMask, download from <a href="https://metamask.io/">here</a>.
+		</p>
+	{/if}
 {/if}
 
-<button on:click={() => (showDebug = !showDebug)}>
-	{showDebug ? 'Hide' : 'Show'} debug data
-</button>
+<div>
+	<button on:click={() => (showDebug = !showDebug)}>
+		{showDebug ? 'Hide' : 'Show'} debug data
+	</button>
 
-{#if showDebug}
-	<code>
-		<pre>{JSON.stringify(user, null, 2)}</pre>
-	</code>
-{/if}
+	{#if showDebug}
+		<code>
+			<pre>{JSON.stringify(user, null, 2)}</pre>
+		</code>
+	{/if}
+</div>
+
+<style>
+	div {
+		margin-top: 2em;
+	}
+</style>

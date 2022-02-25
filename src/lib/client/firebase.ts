@@ -5,21 +5,16 @@ import { getFirestore, doc, getDoc } from 'firebase/firestore/lite';
 import {
 	getAuth,
 	signInWithCustomToken,
-	onAuthStateChanged,
 	signOut,
 	GoogleAuthProvider,
 	signInWithPopup,
 	linkWithPopup,
 	unlink,
-	onIdTokenChanged,
-	linkWithRedirect
+	onIdTokenChanged
 } from 'firebase/auth';
 import { base } from '$app/paths';
 import { currentUser, firebaseEnv, isLoggingIn, signature } from '$lib/stores';
-import { get } from 'svelte/store';
 import { firebaseConfig } from '$lib/contants';
-import { ethereum } from '../web3';
-// console.log('firebase');
 
 const firebaseApp: any =
 	browser && (getApps().length === 0 ? initializeApp(firebaseConfig) : getApp());
@@ -63,17 +58,13 @@ async function loginWithGoogle() {
 		});
 }
 
-async function metamaskSignIn() {
+async function metamaskSignIn(reload = true) {
 	const auth = getAuth();
-	const { address }: any = get(currentUser);
-	// let address: any = '';
-	// currentUser.subscribe((e) => (address = e.address));
 
 	isLoggingIn.set(true);
 	let message = '';
 	signature.subscribe((e) => (message = e));
-	// console.log({ message });
-	let { token, uid, upgraded } = await fetch(`${base}/api/login`, {
+	let { token, uid } = await fetch(`${base}/api/login`, {
 		method: 'post',
 		headers: {
 			'Content-Type': 'application/json'
@@ -84,12 +75,8 @@ async function metamaskSignIn() {
 		.then((e) => e);
 
 	if (token) {
-		signInWithCustomToken(auth, token)
+		return await signInWithCustomToken(auth, token)
 			.then(async (creds: any) => {
-				// Signed in..
-				// console.log(user);
-
-				// console.log({ creds });
 				currentUser.set({
 					user: creds.user,
 					uid
@@ -97,21 +84,26 @@ async function metamaskSignIn() {
 				isLoggingIn.set(false);
 				const idTokenResult = await auth.currentUser.getIdTokenResult(true);
 				const { success } = await setToken(idTokenResult.token);
-				if (success) {
+				if (success && reload) {
 					window.location.reload();
 				}
-				// // console.log(result);
-				return { creds };
+
+				return { creds, idTokenResult };
 			})
 			.catch((error) => {
 				const errorCode = error.code;
 				const errorMessage = error.message;
 				console.log(error);
 				// ...
+				return error;
 			});
 	}
 }
 
+async function linkWeb3Provider() {
+	const { token } = await metamaskSignIn(false);
+	console.log(token);
+}
 async function linkProviders() {
 	const provider = new GoogleAuthProvider();
 	const auth = getAuth();
@@ -122,7 +114,7 @@ async function linkProviders() {
 		const user = result.user;
 		try {
 			const credential = GoogleAuthProvider.credentialFromResult(result);
-			window.location.reload()
+			window.location.reload();
 			return credential;
 		} catch (error) {
 			console.log(error);
@@ -216,5 +208,6 @@ export {
 	logOut,
 	authChanged,
 	linkProviders,
+	linkWeb3Provider,
 	unLinkProviders
 };
